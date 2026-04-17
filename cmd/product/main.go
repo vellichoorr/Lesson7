@@ -41,10 +41,9 @@ func main() {
 		fmt.Println(err)
 	}
 
-	amount := int(price * tiinToSum)
-	productInfo.Price = amount
+	productInfo.Price = int(price * tiinToSum)
 
-	calculatedAmount := product.Calculate(amount)
+	calculatedAmount := product.Calculate(productInfo.Price)
 
 	converted := product.Converter(productInfo, calculatedAmount)
 	fmt.Println(converted)
