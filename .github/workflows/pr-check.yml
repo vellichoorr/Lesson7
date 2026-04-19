@@ -75,6 +75,19 @@ jobs:
         echo "## Checking Required Tests" | tee test_check.txt
         echo "" | tee -a test_check.txt
 
+        # First check if ALL tests pass (including TestMain)
+        echo "### All Tests Status:" | tee -a test_check.txt
+        if [ "${{ steps.test_all.outputs.test_status }}" = "failed" ]; then
+          echo "❌ Some tests are failing (including unit tests)" | tee -a test_check.txt
+          echo "" | tee -a test_check.txt
+          echo "Please ensure ALL tests pass, not just Example tests!" | tee -a test_check.txt
+          all_tests_pass=false
+        else
+          echo "✅ All tests passed" | tee -a test_check.txt
+          all_tests_pass=true
+        fi
+        echo "" | tee -a test_check.txt
+
         # Required tests that must pass
         declare -a required_tests=(
           "ExampleCalculate"
@@ -134,7 +147,12 @@ jobs:
         echo "Bonus tests: $bonus_passed/$bonus_total passed" | tee -a test_check.txt
 
         # Calculate grade
-        if [ "$all_required_pass" = true ]; then
+        if [ "$all_tests_pass" = false ]; then
+          grade="FAIL"
+          echo "" | tee -a test_check.txt
+          echo "⚠️ **IMPORTANT:** Not all tests are passing!" | tee -a test_check.txt
+          echo "This includes unit tests (TestMain) which must also pass." | tee -a test_check.txt
+        elif [ "$all_required_pass" = true ]; then
           grade="PASS"
           if [ $bonus_passed -ge 8 ]; then
             grade="EXCELLENT"
@@ -155,7 +173,7 @@ jobs:
         echo "bonus_total=$bonus_total" >> $GITHUB_OUTPUT
         echo "grade=$grade" >> $GITHUB_OUTPUT
 
-        if [ "$all_required_pass" = false ]; then
+        if [ "$all_required_pass" = false ] || [ "$all_tests_pass" = false ]; then
           exit 1
         fi
 

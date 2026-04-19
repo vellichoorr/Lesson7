@@ -59,11 +59,28 @@ jobs:
         echo "### Coverage:" >> $GITHUB_STEP_SUMMARY
         go test -cover ./... 2>&1 | grep -E "coverage:" >> $GITHUB_STEP_SUMMARY || true
 
-    - name: Check specific test requirements
+    - name: Check all tests including main tests
       run: |
-        echo "Checking required tests..."
+        echo "Checking ALL tests (including TestMain)..."
 
-        # List of required tests
+        # First check if ALL tests pass (including TestMain)
+        if ! go test ./... > test-output.txt 2>&1; then
+          echo "❌ Some tests are failing!"
+          echo ""
+          echo "Failed tests:"
+          cat test-output.txt | grep -E "FAIL|---" | head -20
+          echo ""
+          echo "Full output:"
+          cat test-output.txt
+          exit 1
+        fi
+
+        echo "✅ All tests passed!"
+
+        # Now check specific required Example tests
+        echo ""
+        echo "Verifying required Example tests..."
+
         required_tests=(
           "ExampleCalculate"
           "ExampleCalculate_negative"
@@ -72,22 +89,10 @@ jobs:
           "ExampleConverter_tiin"
         )
 
-        all_passed=true
-
         for test in "${required_tests[@]}"; do
           if go test -run "^${test}$" ./... > /dev/null 2>&1; then
             echo "✅ $test passed"
           else
             echo "❌ $test failed"
-            all_passed=false
           fi
         done
-
-        if [ "$all_passed" = false ]; then
-          echo ""
-          echo "❌ Not all required tests are passing"
-          exit 1
-        else
-          echo ""
-          echo "✅ All required tests are passing!"
-        fi
