@@ -40,7 +40,7 @@ func main() {
 	productInfo.InStock, err = strconv.ParseBool(stockStr)
 	if err != nil {
 		fmt.Println(err)
-		return
+		productInfo.InStock = false
 	}
 
 	productInfo.Price = int(price * tiinToSum)
